@@ -1,6 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const { MongoClient, ServerApiVersion } = require('mongodb');
+
 dotenv.config()
 
 
@@ -34,7 +35,7 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-    res.send("Server is running fine!")
+    res.send("Congratulations! Your Server is running fine!")
 })
 
 
