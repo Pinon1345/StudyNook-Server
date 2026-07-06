@@ -65,6 +65,20 @@ async function run() {
 
         })
 
+        // Patch API for updating Room Details
+
+        app.patch('/room/:id', async (req, res) => {
+            const { id } = req.params
+            const updatedData = req.body
+
+            const result = await roomCollection.updateOne(
+                { _id: new ObjectId(id) },
+                { $set: updatedData }
+            )
+
+            res.json(result)
+        })
+
 
 
         await client.db("admin").command({ ping: 1 });
