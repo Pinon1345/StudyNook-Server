@@ -34,6 +34,9 @@ async function run() {
 
         const db = client.db("studynook")
         const roomCollection = db.collection("rooms")
+        const bookingCollection = db.collection("bookings")
+
+
 
         // Get API for getting all Rooms
 
@@ -86,6 +89,15 @@ async function run() {
             const result = await roomCollection.deleteOne({ _id: new ObjectId(id) })
             res.json(result)
 
+        })
+
+        // Post API for bookings room
+
+        app.post('/booking', async (req, res) => {
+            const bookingData = req.body
+            const result = await bookingCollection.insertOne(bookingData)
+
+            res.json(result)
         })
 
 
