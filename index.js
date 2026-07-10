@@ -91,14 +91,69 @@ async function run() {
 
         })
 
+
         // Post API for bookings room
 
         app.post('/booking', async (req, res) => {
+
             const bookingData = req.body
+
+            const bookingDate = new Date(bookingData.date);
+
+            const today = new Date();
+
+            today.setHours(0, 0, 0, 0);
+
+            bookingDate.setHours(0, 0, 0, 0);
+
+            if (bookingDate < today) {
+                return res.status(400).json({
+                    success: false,
+                    message: "You cannot book a room for a past date."
+                });
+            }
+
+            const hourlyRate = 5;
+
+            const startHour = Number(bookingData.startTime.split(":")[0]);
+            const endHour = Number(bookingData.endTime.split(":")[0]);
+
+            const duration = endHour - startHour;
+            const totalCost = duration * hourlyRate;
+
+
+            const conflict = await bookingCollection.findOne({
+                roomId: bookingData.roomId,
+                date: bookingData.date,
+                status: "confirmed",
+                startTime: bookingData.startTime,
+                endTime: bookingData.endTime,
+            });
+
+            if (conflict) {
+                return res.status(400).json({
+                    success: false,
+                    message: "This room is already booked."
+                });
+            }
+
+            bookingData.status = "confirmed";
+
+            bookingData.hourlyRate = hourlyRate;
+            bookingData.duration = duration;
+            bookingData.totalCost = totalCost;
+
+
             const result = await bookingCollection.insertOne(bookingData)
 
-            res.json(result)
+            res.json({
+                success: true,
+                message: "Room booked successfully!",
+                result
+            });
         })
+
+
 
 
 
