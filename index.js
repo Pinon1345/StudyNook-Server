@@ -154,6 +154,43 @@ async function run() {
         })
 
 
+        // Create Get My Bookings API
+
+        app.get('/booking/:userId', async (req, res) => {
+            const { userId } = req.params;
+
+            const result = await bookingCollection
+                .find({ userId })
+                .toArray();
+
+            res.json(result);
+        });
+
+
+        // Create Cancel Booking API from My Bookings Page
+
+        app.patch("/booking/:id/cancel", async (req, res) => {
+
+            const { id } = req.params;
+
+            const result = await bookingCollection.updateOne(
+                { _id: new ObjectId(id) },
+                {
+                    $set: {
+                        status: "cancelled"
+                    }
+                }
+            );
+
+            res.json({
+                success: true,
+                message: "Booking cancelled",
+                result
+            });
+
+        });
+
+
 
 
 
