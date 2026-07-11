@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { createRemoteJWKSet, jwtVerify } = require('jose-cjs');
 
 dotenv.config()
 
@@ -22,6 +23,30 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     }
 });
+
+const JWKS = createRemoteJWKSet(
+    new URL("http://localhost:3000/api/auth/jwks")
+)
+
+const verifyToken = async (req, res, next) => {
+    const authHeader = req?.headers.authorization
+    if (!authHeader) {
+        return res.status(401).json({ message: "Unauthorized" })
+    }
+    const token = authHeader.split(" ")[1]
+    if (!token) {
+        return res.status(401).json({ message: "Unauthorized" })
+    }
+
+    try {
+        const { payload } = await jwtVerify(token, JWKS)
+        console.log(payload)
+        next()
+    } catch (error) {
+        return res.status(403).json({ message: "Forbidden" })
+    }
+
+}
 
 
 async function run() {
@@ -47,8 +72,9 @@ async function run() {
 
 
         // Post API for Adding New Room
+        // Middleware
 
-        app.post('/room', async (req, res) => {
+        app.post('/room', verifyToken, async (req, res) => {
             const roomData = req.body
             console.log(roomData)
             const result = await roomCollection.insertOne(roomData)
@@ -58,8 +84,9 @@ async function run() {
         })
 
         // Get API for Room Details
+        // Middleware
 
-        app.get('/room/:id', async (req, res) => {
+        app.get('/room/:id', verifyToken, async (req, res) => {
             const { id } = req.params
 
             const result = await roomCollection.findOne({ _id: new ObjectId(id) })
@@ -69,8 +96,9 @@ async function run() {
         })
 
         // Patch API for updating Room Details
+        // Middleware
 
-        app.patch('/room/:id', async (req, res) => {
+        app.patch('/room/:id', verifyToken, async (req, res) => {
             const { id } = req.params
             const updatedData = req.body
 
@@ -83,8 +111,9 @@ async function run() {
         })
 
         // Delete API for deleting Room Details
+        // Middleware
 
-        app.delete('/room/:id', async (req, res) => {
+        app.delete('/room/:id', verifyToken, async (req, res) => {
             const { id } = req.params
             const result = await roomCollection.deleteOne({ _id: new ObjectId(id) })
             res.json(result)
@@ -93,8 +122,9 @@ async function run() {
 
 
         // Post API for bookings room
+        // Middleware
 
-        app.post('/booking', async (req, res) => {
+        app.post('/booking', verifyToken, async (req, res) => {
 
             const bookingData = req.body
 
@@ -168,8 +198,9 @@ async function run() {
 
 
         // Create Cancel Booking API from My Bookings Page
+        // Middleware
 
-        app.patch("/booking/:id/cancel", async (req, res) => {
+        app.patch("/booking/:id/cancel", verifyToken, async (req, res) => {
 
             const { id } = req.params;
 
